@@ -15,6 +15,8 @@ static const unsigned char bulk_ep1_out = 0x01;
 static const unsigned char bulk_ep1_in = 0x81;
 static const unsigned char bulk_ep2_out = 0x02;
 static const unsigned char bulk_ep2_in = 0x82;
+static const unsigned char bulk_ep3_out = 0x03;
+static const unsigned char bulk_ep3_in = 0x83;
 
 string MakeUniqueUSBDescriptor(char* strDesc, unsigned char serialNumber) {
 	stringstream ss;
@@ -161,6 +163,37 @@ int main()
 		}
 		else {
 			printf("Error in Ep2 read (code = %u", ret);
+			printf("); received %i bytes\n", receivedBytes);
+		}
+
+		// communication on Endpoint3
+		// write
+		sentBytes = 0;
+		receivedBytes = 0;
+		buffOut = new unsigned char[] { "finally checking Ep3" };
+		length = (int)strlen((char*)buffOut);
+		ret = libusb_bulk_transfer(usbHandle, bulk_ep3_out, buffOut, length, &sentBytes, 1000);
+		if (ret == 0 && sentBytes == length) {
+			printf("Write on Ep3 successful!\n");
+			printf("Sent string with %i", sentBytes);
+			printf(" bytes: %s\n", buffOut);
+		}
+		else {
+			printf("Error in Ep3 write (code = %u", ret);
+			printf("); transferred %i bytes\n", sentBytes);
+		}
+		Sleep(3);
+		// read
+		buffIn = new unsigned char[512];
+		ret = libusb_bulk_transfer(usbHandle, bulk_ep3_in, buffIn, 512, &receivedBytes, 1000);
+		buffIn[receivedBytes] = '\0';
+		if (ret == 0 && receivedBytes == strlen((char*)buffIn)) {
+			printf("Read on Ep3 successful!\n");
+			printf("Received %d", receivedBytes);
+			printf(" bytes with string: %s\n", buffIn);
+		}
+		else {
+			printf("Error in Ep3 read (code = %u", ret);
 			printf("); received %i bytes\n", receivedBytes);
 		}
 
